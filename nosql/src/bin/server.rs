@@ -73,7 +73,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 Err(e) => {
                     println!("result: {:?}", e);
 
-                    sender.send(b"no.".to_vec()).await?;
+                    sender.send(b"command could not be executed".to_vec()).await?;
                 }
             }
         }
