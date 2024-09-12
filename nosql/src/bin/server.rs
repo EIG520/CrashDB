@@ -1,5 +1,4 @@
 use nosql::commands::commands::DbHandler;
-//use nosql::commands;
 use tokio::net::TcpListener;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use std::sync::Arc;
@@ -94,11 +93,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
             match dbhandler.handle_command(&mut cmd.split_whitespace()) {
                 Ok(res) => {
-                    let vres = res.to_vec();
+                    println!("result: {:?}", String::from_utf8(res.clone()));
 
-                    println!("result: {:?}", String::from_utf8(vres.clone()));
-
-                    sender.send(vres).await?;
+                    sender.send(res).await?;
                 },
                 Err(e) => {
                     println!("result: {:?}", e);
