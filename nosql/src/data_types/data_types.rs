@@ -1,5 +1,6 @@
 pub trait Savable {
     fn to_bin(&self) -> &[u8];
+    fn signature(&self) -> u8;
 }
 
 pub trait Loadable {

@@ -4,6 +4,7 @@ use super::data_types::DBDataType;
 
 impl Savable for String {
     fn to_bin(&self) -> &[u8] { self.as_bytes() }
+    fn signature(&self) -> u8 { 0 }
 }
 
 impl Loadable for String {

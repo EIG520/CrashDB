@@ -3,7 +3,6 @@ use crate::data_types::data_types::Savable;
 use std::rc::Rc;
 use std::fmt::Debug;
 use core::fmt;
-use std::str::SplitWhitespace;
 
 pub struct KeyNotFoundError {key: String}
 
@@ -22,7 +21,7 @@ impl Debug for KeyNotFoundError {
 impl std::error::Error for KeyNotFoundError {}
 
 impl DbHandler {
-    pub fn handle_get(&mut self, cmd: &mut SplitWhitespace) -> Result<Vec<u8>, Box<dyn std::error::Error + '_>> {
+    pub fn handle_get<'a>(&mut self, mut cmd: impl Iterator<Item = &'a str>) -> Result<Vec<u8>, Box<dyn std::error::Error + '_>> {
         let bind = self.load(cmd.next().ok_or(std::io::Error::new(std::io::ErrorKind::AddrInUse, "no key"))?.to_owned())?;
         let retr = bind.to_bin();
 

@@ -2,11 +2,11 @@ use tokio::{io::AsyncWriteExt, io::AsyncReadExt, net::TcpStream};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>>{
-    println!("NOSQL client");
-
     // Set defaults
     let mut ip = "127.0.0.1";
     let mut port = "8080";
+
+    let mut cmd: Option<&str> = None;
 
     // Take command line arguments
     let args: Vec<String> = std::env::args().into_iter().collect();
@@ -15,11 +15,27 @@ async fn main() -> Result<(), Box<dyn std::error::Error>>{
         match arg1.as_str() {
             "ip" => {ip = &arg2;}
             "port" => {port = &arg2;}
+            "run" => {cmd = Some(&arg2);}
             _ => {}
         }
     }
 
     let mut stream = TcpStream::connect(format!("{}:{}", ip, port)).await?;
+
+    if let Some(rcmd) = cmd {
+        // Send command to server
+        stream.write_all(rcmd.as_bytes()).await?;
+        stream.flush().await?;
+
+        // Get response from server
+        let mut buf = vec![];
+        let _bytes = stream.read_buf(&mut buf).await?;
+
+        println!("{:?}", String::from_utf8(buf)?);
+        return Ok(())
+    }
+
+    println!("NOSQL client");
 
     loop {
         // Read input
