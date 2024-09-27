@@ -1,4 +1,5 @@
 use nosql::commands::commands::DbHandler;
+use nosql::data_types::data_types::Loadable;
 use tokio::net::TcpListener;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use std::sync::Arc;
@@ -38,7 +39,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let listener = TcpListener::bind(format!("{ip}:{port}")).await?;
     // sender to send senders so the listening thread can send responses back
     // surely there is no better solution
-    let (cmdsender, mut cmdlistener) = mpsc::channel::<(String, mpsc::Sender<Vec<u8>>)>(1000);
+    let (cmdsender, mut cmdlistener) = mpsc::channel::<(String, Vec<String>, mpsc::Sender<Vec<u8>>)>(1000);
 
     tokio::spawn(async move { 
 
@@ -55,26 +56,37 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             if let Ok((mut socket, _addr)) = listener.accept().await {
 
                 tokio::spawn( async move {
+                    let mut dir: Vec<String> = vec![];
 
                     // Send commands from client to main loop
                     loop {
                         let mut buf = vec![];
 
                         let _ = socket.read_buf(&mut buf).await;
+                        let cmd = String::from_utf8(buf).unwrap();
 
                         let (gsend, mut grecv) = mpsc::channel::<Vec<u8>>(1);
 
-                        let _ = rcmdsender.send((String::from_utf8(buf).unwrap(), gsend)).await;
+                        let _ = rcmdsender.send((cmd, dir.clone(), gsend)).await;
 
                         let mut resp = &vec![];
 
-                        let tresp = &grecv.recv().await;
+                        let tresp: &Option<Vec<u8>> = &grecv.recv().await;
 
                         if let Some(s) = tresp {
                             resp = s;
-                        } 
+                        }
 
-                        // gracefully exit (ignore the error)
+                        if let Some(id) = resp.last() {
+                            match id {
+                                0 => {
+                                    dir.push(String::from_bin(&resp[0..(resp.len()-1)]))
+                                }
+                                _ => {}
+                            }
+                        }
+
+                        // 'gracefully' exit (ignore the error)
                         if let Err(_) = socket.write_all(&resp).await {
                             break;
                         }
@@ -88,7 +100,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Main loop for handling commands
     loop {
         // Get next command
-        if let Some((cmd, sender)) = cmdlistener.recv().await {
+        if let Some((cmd, _dir, sender)) = cmdlistener.recv().await {
             println!("executing command: {:?}", cmd);
 
             match dbhandler.handle_command(&mut cmd.split_whitespace()) {

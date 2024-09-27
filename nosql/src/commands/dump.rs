@@ -27,47 +27,50 @@ impl DbHandler {
         let mut bytes = 0;
 
         for (key, value) in self.data.lock().expect("couldn't mutex :(").iter() {
-            let key_bin = key.to_bin();
-            let val_bin = value.to_bin();
 
-            
-            // entry structure:
-            // | value bytes | value type | key | null byte | value |
+            let to_write = DbHandler::kv_bits(key, value);
 
-            // 4 bytes for the "total bytes" section
-            // so nothing longer than 2^32
+            file.write_all(&to_write)?;
 
-            let size = val_bin.len();
-
-            let to_write = &(vec![
-                // type signature
-                value.signature(),
-
-                // Number of bytes in value
-
-                // bithacks 
-                    // evil if you're just seeing them for the first time
-                    // otherwise pretty self-explanatory
-                ((size >> 24) & 255) as u8,
-                ((size >> 16) & 255) as u8,
-                ((size >> 8) & 255)  as u8,
-                (size & 255)         as u8,
-                ].iter()
-                    .chain(key_bin)
-                    .chain(&[0])
-                    .chain(val_bin)
-                    .map(|&i| i).collect::<Vec<u8>>());
-
-            file.write_all(to_write)?;
-
-            bytes += 6;
-            bytes += key_bin.len();
-            bytes += val_bin.len();
+            bytes += to_write.len();
 
             file.flush()?;
         }
 
         Ok(format!("{} bytes dumped to {}", bytes, self.dump_path).to_bin().to_vec())
+    }
+
+    pub fn kv_bits(key: &String, value: &Rc<dyn Savable>) -> Vec<u8> {
+        // entry structure:
+        // | value bytes | value type | key | null byte | value |
+
+        // 4 bytes for the "total bytes" section
+        // so nothing longer than 2^32
+  
+        let key_bin = key.to_bin();
+        let val_bin = value.to_bin();
+
+        let size = val_bin.len();
+
+        vec![
+            // type signature
+            value.signature(),
+
+            // Number of bytes in value
+            // bithacks 
+                // evil if you're just seeing them for the first time
+                // otherwise pretty self-explanatory
+            ((size >> 24) & 255) as u8,
+            ((size >> 16) & 255) as u8,
+            ((size >> 8) & 255)  as u8,
+            (size & 255)         as u8
+        ]
+            // the important part
+            .iter()
+                .chain(key_bin)
+                .chain(&[0])
+                .chain(val_bin)
+                .map(|&i| i).collect::<Vec<u8>>()
     }
 
     pub fn handle_full_load(&mut self) -> Result<Vec<u8>, Box<dyn std::error::Error>> {

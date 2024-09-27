@@ -1,12 +1,12 @@
 use super::commands::{DbHandler, NotEnoughArgsError};
-use crate::data_types::data_types::Savable;
+use crate::data_types::{data_types::Savable, table::Table};
 use std::rc::Rc;
 
 impl DbHandler {
     pub fn handle_set<'a>(&mut self, mut cmd: impl Iterator<Item=&'a str>) -> Result<Vec<u8>, Box<dyn std::error::Error>> {        
         self.save(
             cmd.next().ok_or(NotEnoughArgsError {})?.to_owned(),
-            Rc::new(cmd.next().ok_or(std::io::Error::new(std::io::ErrorKind::AddrInUse, "no value"))?.to_owned())
+            Rc::new(cmd.next().ok_or(NotEnoughArgsError {})?.to_owned())
         )?;
 
 
@@ -22,6 +22,30 @@ impl DbHandler {
             panic!("{:?}", lock);
         }
         
+        Ok(())
+    }
+
+    pub fn handle_touch<'a>(&mut self, mut cmd: impl Iterator<Item=&'a str>) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
+        let name = cmd.next().ok_or(NotEnoughArgsError {})?.to_owned();
+        let ty = cmd.next().ok_or( NotEnoughArgsError {})?;
+
+        self.touch(name, match ty {
+            "str" => 0,
+            "table" => 1,
+            _ => 0
+        })?;
+
+        Ok(b"done".to_vec())
+    }
+
+    pub fn touch(&mut self, name: String, ty: usize) -> Result<(), Box<dyn std::error::Error>> {
+        self.save(name,
+            
+            match ty {
+            1 => Rc::new(Table::default()),
+            _ => Rc::new(String::default())
+        })?;
+
         Ok(())
     }
 }

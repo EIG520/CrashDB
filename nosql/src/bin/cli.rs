@@ -1,3 +1,5 @@
+use std::io::Write;
+
 use tokio::{io::AsyncWriteExt, io::AsyncReadExt, net::TcpStream};
 
 #[tokio::main]
@@ -31,7 +33,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>>{
         let mut buf = vec![];
         let _bytes = stream.read_buf(&mut buf).await?;
 
-        println!("{:?}", String::from_utf8(buf)?);
+        // don't use println since output may contain invalid bytes
+        // TODO: make pretty if not passed through command line args
+        std::io::stdout().write_all(&buf)?;
+        std::io::stdout().flush()?;
+
         return Ok(())
     }
 
