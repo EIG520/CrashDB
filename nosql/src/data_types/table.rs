@@ -1,13 +1,14 @@
 use std::collections::HashMap;
 use std::rc::Rc;
+use std::cell::RefCell;
 
 use crate::data_types::data_types::{Savable, Loadable};
 use crate::commands::commands::DbHandler;
 
-use super::data_types::DBDataType;
+use super::data_types::{DBDataType, SavableType};
 
 pub struct Table {
-    data: HashMap<String, Rc<dyn Savable>>,
+    pub data: HashMap<String, Rc<RefCell<SavableType>>>,
     bin_data: Vec<u8>
 }
 
@@ -49,11 +50,11 @@ impl Loadable for Table {
 
             let value_bytes = &b[idx..(idx+size)];
 
-            let value: Rc<dyn Savable> = match type_signature {
-                0 => Rc::new(String::from_bin(&value_bytes)),
-                1 => Rc::new(Table::from_bin(&value_bytes)),
-                _ => Rc::new(String::from_bin(&value_bytes)),
-            };
+            let value: Rc<RefCell<SavableType>> = Rc::new(RefCell::new(match type_signature {
+                0 => SavableType::String(String::from_bin(&value_bytes)),
+                1 => SavableType::Table(Table::from_bin(&value_bytes)),
+                _ => SavableType::String(String::from_bin(&value_bytes)),
+            }));
 
             table.insert(key, value);
         }
@@ -69,7 +70,7 @@ impl Default for Table {
 impl DBDataType for Table {}
 
 impl Table {
-    pub fn insert(&mut self, key: String, value: Rc<dyn Savable>) {
+    pub fn insert(&mut self, key: String, value: Rc<RefCell<SavableType>>) {
         self.data.insert(key, value);
         // TODO: NOT THIS!!!!
         self.update_bin_data();
@@ -88,3 +89,4 @@ impl Table {
         }
     }
 }
+

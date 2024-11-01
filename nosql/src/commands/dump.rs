@@ -1,6 +1,6 @@
 use crate::data_types::data_types::*;
 
-use std::{fmt, io::ErrorKind};
+use std::{cell::RefCell, fmt, io::ErrorKind};
 use super::commands::DbHandler;
 use std::{fs::File, io::{BufWriter, BufRead, BufReader, Read, Write}, rc::Rc};
 
@@ -26,7 +26,13 @@ impl DbHandler {
 
         let mut bytes = 0;
 
-        for (key, value) in self.data.lock().expect("couldn't mutex :(").iter() {
+        let dat = self.data.borrow();
+        let kvpairs = match &*dat {
+            SavableType::Table(t) => {t.data.iter()},
+            _ => panic!()
+        };
+
+        for (key, value) in kvpairs {
 
             let to_write = DbHandler::kv_bits(key, value);
 
@@ -40,7 +46,7 @@ impl DbHandler {
         Ok(format!("{} bytes dumped to {}", bytes, self.dump_path).to_bin().to_vec())
     }
 
-    pub fn kv_bits(key: &String, value: &Rc<dyn Savable>) -> Vec<u8> {
+    pub fn kv_bits(key: &String, value: &Rc<RefCell<SavableType>>) -> Vec<u8> {
         // entry structure:
         // | value bytes | value type | key | null byte | value |
 
@@ -48,13 +54,15 @@ impl DbHandler {
         // so nothing longer than 2^32
   
         let key_bin = key.to_bin();
-        let val_bin = value.to_bin();
+
+        let bind = value.borrow();
+        let val_bin = bind.to_bin();
 
         let size = val_bin.len();
 
         vec![
             // type signature
-            value.signature(),
+            value.borrow().signature(),
 
             // Number of bytes in value
             // bithacks 
@@ -62,8 +70,8 @@ impl DbHandler {
                 // otherwise pretty self-explanatory
             ((size >> 24) & 255) as u8,
             ((size >> 16) & 255) as u8,
-            ((size >> 8) & 255)  as u8,
-            (size & 255)         as u8
+            ((size >> 8 ) & 255) as u8,
+            ( size        & 255) as u8
         ]
             // the important part
             .iter()
@@ -116,7 +124,9 @@ impl DbHandler {
                     signature => return Err(Box::new(InvalidTypeSignature {signature}))
                 };
 
-                self.save(key, Rc::new(value))?;
+                if let SavableType::Table(t) = &mut *self.data.borrow_mut() {
+                    t.save(key, Rc::new(RefCell::new(SavableType::String(value))))?;
+                }
             }
             Ok(b"loaded".to_vec())
         } else {

@@ -1,10 +1,10 @@
 //use std::fs::File;
-use std::sync::Mutex;
-use crate::data_types::data_types::Savable;
-use std::collections::HashMap;
-use std::rc::Rc;
+use crate::data_types::data_types::{Savable, SavableType};
+use crate::data_types::table::Table;
+use std::cell::RefCell;
 use std::fmt::Debug;
 use std::fmt;
+use std::rc::Rc;
 
 impl Debug for dyn Savable {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -34,26 +34,33 @@ pub trait Command {
 
 pub struct DbHandler {
     pub dump_path: String,
-    pub data: Mutex<HashMap<String, Rc<dyn Savable>>>
+    pub data: Rc<RefCell<SavableType>>
 }
 
 impl DbHandler {
-
-    pub fn handle_command<'a>(&mut self, mut cmd: impl Iterator<Item = &'a str>) -> Result<Vec<u8>, Box<dyn std::error::Error + '_>> {
+    pub fn handle_command<'a>(&'a mut self, mut cmd: impl Iterator<Item = &'a str>) -> Result<Vec<u8>, Box<dyn std::error::Error + '_>> {
         let command = cmd.next().ok_or(NotEnoughArgsError {})?;
     
         match command {
-            "set" => self.handle_set(cmd),
-            "get" => self.handle_get(cmd),
             "dump" => self.handle_dump(cmd),
-            "open" => self.handle_open(cmd),
             _ => Ok(b"unknown command".to_vec())
         }
     }
 }
 
+impl Table {
+    pub fn handle_command<'a>(&mut self, first: &'a str, cmd: impl Iterator<Item = &'a str>) -> Result<Vec<u8>, Box<dyn std::error::Error + '_>> {
+        return match first {
+            "set" => self.handle_set(cmd),
+            "get" => self.handle_get(cmd),
+            "touch" => self.handle_touch(cmd),
+            _ => Ok(b"unknown command".to_vec())
+        };
+    }
+}
+
 impl Default for DbHandler {
     fn default() -> Self {
-        DbHandler { data: Mutex::new(HashMap::new()), dump_path: "dump.dat".to_owned() }
+        DbHandler { data: Rc::new(RefCell::new(SavableType::Table(Table::default()))), dump_path: "dump.dat".to_owned() }
     }
 }
