@@ -41,7 +41,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>>{
         return Ok(())
     }
 
-    println!("NOSQL client");
+    println!("NOSQL CLIENT");
 
     loop {
         // Read input
