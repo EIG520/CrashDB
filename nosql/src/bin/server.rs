@@ -50,84 +50,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         // Look for new clients trying to connect
         loop {
-            // New client trying to connect
-            if let Ok((mut socket, _addr)) = listener.accept().await {
-                // Local thing to send commands to main loop
-                let rcmdsender = fcmdsender.clone();
-                
-                tokio::spawn( async move {
-                    let mut dir: Vec<String> = vec![];
-
-                    // Send commands from client to main loop
-                    loop {
-                        let mut buf = vec![];
-
-                        let _ = socket.read_buf(&mut buf).await;
-                        let ucmd = String::from_utf8(buf).unwrap();
-                        let mut cmd = ucmd.split_whitespace().map(|x| x.to_owned());
-
-                        let (gsend, mut grecv) = mpsc::channel::<Vec<u8>>(1);
-                        
-                        // intercept open command
-
-                        // I'm not proud of this
-                        let first = match cmd.next() {
-                            Some(t) => {
-                                match t.as_str() {
-                                    "open" => {
-                                        if let Some(name) = cmd.next() {
-                                            dir.push(name.to_owned());
-                                        }
-                                        if let Err(_) = socket.write_all(b"opened").await {
-                                            break;
-                                        }
-                                        continue;
-                                    },
-                                    "close" => {
-                                        match dir.pop() {
-                                            Some(t) => {
-                                                if let Err(_) = socket.write_all(format!("closed file {:?}", t).as_bytes()).await {
-                                                    break;
-                                                }
-                                                continue;
-                                            },
-                                            _ => {
-                                                if let Err(_) = socket.write_all(b"file couldn't be closed").await {
-                                                    break;
-                                                }
-                                                continue;
-                                            }
-                                        };
-                                    },
-                                    _ => {t}
-                                }
-
-                            },
-                            _ => {
-                                if let Err(_) = socket.write_all(b"invalid command").await {
-                                    break;
-                                }
-                                continue;
-                            },
-                        };
-
-                        let _ = rcmdsender.send((first.to_owned(), cmd.collect::<Vec<String>>().clone(), dir.clone(), gsend)).await;
-
-                        let mut resp = &vec![];
-
-                        let tresp: &Option<Vec<u8>> = &grecv.recv().await;
-
-                        if let Some(s) = tresp {
-                            resp = s;
-                        }
-
-                        // 'gracefully' exit (ignore the error)
-                        if let Err(_) = socket.write_all(&resp).await {
-                            break;
-                        }
-                    }
-                });
-            }
+            listen_for_client(fcmdsender.clone(), &listener).await;
         }
     });
 
@@ -165,5 +88,86 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 };
             };
         }
+    }
+}
+
+async fn listen_for_client(fcmdsender: Arc<mpsc::Sender<(String, Vec<String>, Vec<String>, mpsc::Sender<Vec<u8>>)>>, listener: &TcpListener) {
+    // New client trying to connect
+    if let Ok((mut socket, _addr)) = listener.accept().await {
+        // Local thing to send commands to main loop
+        let rcmdsender = fcmdsender.clone();
+        
+        tokio::spawn( async move {
+            let mut dir: Vec<String> = vec![];
+
+            // Send commands from client to main loop
+            loop {
+                let mut buf = vec![];
+
+                let _ = socket.read_buf(&mut buf).await;
+                let ucmd = String::from_utf8(buf).unwrap();
+                let mut cmd = ucmd.split_whitespace().map(|x| x.to_owned());
+
+                let (gsend, mut grecv) = mpsc::channel::<Vec<u8>>(1);
+                
+                // intercept open command
+
+                // I'm not proud of this
+                let first = match cmd.next() {
+                    Some(t) => {
+                        match t.as_str() {
+                            "open" => {
+                                if let Some(name) = cmd.next() {
+                                    dir.push(name.to_owned());
+                                }
+                                if let Err(_) = socket.write_all(b"opened").await {
+                                    break;
+                                }
+                                continue;
+                            },
+                            "close" => {
+                                match dir.pop() {
+                                    Some(t) => {
+                                        if let Err(_) = socket.write_all(format!("closed file {:?}", t).as_bytes()).await {
+                                            break;
+                                        }
+                                        continue;
+                                    },
+                                    _ => {
+                                        if let Err(_) = socket.write_all(b"file couldn't be closed").await {
+                                            break;
+                                        }
+                                        continue;
+                                    }
+                                };
+                            },
+                            _ => {t}
+                        }
+
+                    },
+                    _ => {
+                        if let Err(_) = socket.write_all(b"invalid command").await {
+                            break;
+                        }
+                        continue;
+                    },
+                };
+
+                let _ = rcmdsender.send((first.to_owned(), cmd.collect::<Vec<String>>().clone(), dir.clone(), gsend)).await;
+
+                let mut resp = &vec![];
+
+                let tresp: &Option<Vec<u8>> = &grecv.recv().await;
+
+                if let Some(s) = tresp {
+                    resp = s;
+                }
+
+                // 'gracefully' exit (ignore the error)
+                if let Err(_) = socket.write_all(&resp).await {
+                    break;
+                }
+            }
+        });
     }
 }
