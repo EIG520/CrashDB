@@ -61,6 +61,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         if let Some((first, cmdf, dir, sender)) = cmdlistener.recv().await {
             println!("executing command: {:?}", cmdf);
 
+            // Run command if it is directory-independent
+            if let Ok(resp) = dbhandler.handle_command(&first, cmdf.iter().map(|i| i.as_str())) {
+                if resp != b"unknown command" { 
+                    sender.send(resp).await?;
+                    continue;
+                }
+            }
+
+            // Open path
             let mut table: Rc<RefCell<SavableType>> = dbhandler.data.clone();
             let cmd = cmdf;
 

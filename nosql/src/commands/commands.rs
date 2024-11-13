@@ -38,10 +38,8 @@ pub struct DbHandler {
 }
 
 impl DbHandler {
-    pub fn handle_command<'a>(&'a mut self, mut cmd: impl Iterator<Item = &'a str>) -> Result<Vec<u8>, Box<dyn std::error::Error + '_>> {
-        let command = cmd.next().ok_or(NotEnoughArgsError {})?;
-    
-        match command {
+    pub fn handle_command<'a>(&'a mut self, first: &'a str, cmd: impl Iterator<Item = &'a str>) -> Result<Vec<u8>, Box<dyn std::error::Error + '_>> {    
+        return match first {
             "dump" => self.handle_dump(cmd),
             _ => Ok(b"unknown command".to_vec())
         }

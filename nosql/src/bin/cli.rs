@@ -45,6 +45,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>>{
 
     loop {
         // Read input
+        print!("CrashDB> ");
         let mut input = String::new();
         let _ = std::io::stdin().read_line(&mut input);
 
