@@ -47,7 +47,7 @@ impl DbHandler {
 }
 
 impl Table {
-    pub fn handle_command<'a>(&mut self, first: &'a str, cmd: impl Iterator<Item = &'a str>) -> Result<Vec<u8>, Box<dyn std::error::Error + '_>> {
+    pub fn handle_command<'a>(&mut self, first: &'a str, cmd: impl Iterator<Item = &'a str>) -> Result<Vec<u8>, Box<dyn std::error::Error + '_>> {        
         return match first {
             "set" => self.handle_set(cmd),
             "get" => self.handle_get(cmd),

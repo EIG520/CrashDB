@@ -16,7 +16,7 @@ impl Savable for Table {
     fn to_bin(&self) -> &[u8] {
         &self.bin_data
     }
-    fn signature(&self) -> u8 { 0 }
+    fn signature(&self) -> u8 { 1 }
 }
 
 impl Loadable for Table {
@@ -49,6 +49,7 @@ impl Loadable for Table {
             let key = String::from_bin(&key_bytes);
 
             let value_bytes = &b[idx..(idx+size)];
+            idx += size;
 
             let value: Rc<RefCell<SavableType>> = Rc::new(RefCell::new(match type_signature {
                 0 => SavableType::String(String::from_bin(&value_bytes)),
@@ -70,7 +71,7 @@ impl Default for Table {
 impl DBDataType for Table {}
 
 impl Table {
-    pub fn insert(&mut self, key: String, value: Rc<RefCell<SavableType>>) {
+    pub fn insert(&mut self, key: String, value: Rc<RefCell<SavableType>>) {        
         self.data.insert(key, value);
         // TODO: NOT THIS!!!!
         self.update_bin_data();

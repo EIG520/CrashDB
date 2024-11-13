@@ -14,7 +14,7 @@ impl Table {
     }
 
     pub fn save(&mut self, key: String, value: Rc<RefCell<SavableType>>) -> Result<(), Box<dyn std::error::Error>> {
-        self.data.insert(key, value);       
+        self.insert(key, value);       
         Ok(())
     }
 

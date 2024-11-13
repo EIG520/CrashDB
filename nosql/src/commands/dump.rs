@@ -1,4 +1,4 @@
-use crate::data_types::data_types::*;
+use crate::data_types::{data_types::*, table::Table};
 
 use std::{cell::RefCell, fmt, io::ErrorKind};
 use super::commands::DbHandler;
@@ -120,12 +120,13 @@ impl DbHandler {
                 reader.read_exact(&mut vvec)?;
                 
                 let value = match vtype {
-                    0 => String::from_bin(&vvec),
+                    0 => SavableType::String(String::from_bin(&vvec)),
+                    1 => SavableType::Table(Table::from_bin(&vvec)),
                     signature => return Err(Box::new(InvalidTypeSignature {signature}))
                 };
 
                 if let SavableType::Table(t) = &mut *self.data.borrow_mut() {
-                    t.save(key, Rc::new(RefCell::new(SavableType::String(value))))?;
+                    t.save(key, Rc::new(RefCell::new(value)))?;
                 }
             }
             Ok(b"loaded".to_vec())
