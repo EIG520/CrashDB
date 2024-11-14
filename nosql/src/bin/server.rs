@@ -1,5 +1,6 @@
 use nosql::commands::commands::DbHandler;
-use nosql::data_types::data_types::SavableType;
+use nosql::data_types::data_types::{Loadable, SavableType};
+use nosql::utils::bytes_to_usize;
 use tokio::net::TcpListener;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use std::cell::RefCell;
@@ -114,8 +115,7 @@ async fn listen_for_client(fcmdsender: Arc<mpsc::Sender<(String, Vec<String>, Ve
                 let mut buf = vec![];
 
                 let _ = socket.read_buf(&mut buf).await;
-                let ucmd = String::from_utf8(buf).unwrap();
-                let mut cmd = ucmd.split_whitespace().map(|x| x.to_owned());
+                let mut cmd = bytes_to_strvec(buf).into_iter().map(|x| x.to_owned());
 
                 let (gsend, mut grecv) = mpsc::channel::<Vec<u8>>(1);
                 
@@ -179,4 +179,20 @@ async fn listen_for_client(fcmdsender: Arc<mpsc::Sender<(String, Vec<String>, Ve
             }
         });
     }
+}
+
+pub fn bytes_to_strvec(bytes: Vec<u8>) -> Vec<String> {
+    let mut svec = vec![];
+
+    let mut idx = 0;
+    while idx < bytes.len() {
+        let size = bytes_to_usize(vec![bytes[idx], bytes[idx + 1], bytes[idx + 2], bytes[idx + 3]]);
+        idx += 4;
+
+        let str_bytes = bytes[idx..(idx+size)].to_vec();
+        svec.push(String::from_bin(&str_bytes));
+        idx += size;
+    }
+
+    svec
 }

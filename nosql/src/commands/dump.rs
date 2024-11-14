@@ -1,4 +1,4 @@
-use crate::data_types::{data_types::*, table::Table};
+use crate::{data_types::{data_types::*, table::Table}, utils::{bytes_to_usize, u32_to_bytes}};
 
 use std::{cell::RefCell, fmt, io::ErrorKind};
 use super::commands::DbHandler;
@@ -62,19 +62,10 @@ impl DbHandler {
 
         vec![
             // type signature
-            value.borrow().signature(),
-
-            // Number of bytes in value
-            // bithacks 
-                // evil if you're just seeing them for the first time
-                // otherwise pretty self-explanatory
-            ((size >> 24) & 255) as u8,
-            ((size >> 16) & 255) as u8,
-            ((size >> 8 ) & 255) as u8,
-            ( size        & 255) as u8
-        ]
+            value.borrow().signature()
             // the important part
-            .iter()
+        ].iter()
+                .chain(u32_to_bytes(size as u32).iter())
                 .chain(key_bin)
                 .chain(&[0])
                 .chain(val_bin)
@@ -103,11 +94,7 @@ impl DbHandler {
                 let mut bvec: Vec<u8> = vec![0; 4];
                 reader.read_exact(&mut bvec)?;
 
-                let val_bytes = ((bvec[0] as usize) << 24)
-                    + ((bvec[1] as usize) << 16)
-                    + ((bvec[2] as usize) << 8)
-                    + bvec[3] as usize;
-
+                let val_bytes = bytes_to_usize(bvec);
 
                 // read until we find a null byte for key
                 let mut kvec: Vec<u8> = vec![];
