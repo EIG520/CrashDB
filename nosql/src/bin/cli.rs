@@ -62,7 +62,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>>{
         let mut buf = vec![];
         let _bytes = stream.read_buf(&mut buf).await?;
 
-        println!("{:?}", String::from_utf8(buf)?);
+        println!("{}", String::from_utf8(buf)?);
     }
 
     Ok(())

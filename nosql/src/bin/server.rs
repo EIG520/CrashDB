@@ -137,7 +137,7 @@ async fn listen_for_client(fcmdsender: Arc<mpsc::Sender<(String, Vec<String>, Ve
                             "close" => {
                                 match dir.pop() {
                                     Some(t) => {
-                                        if let Err(_) = socket.write_all(format!("closed file {:?}", t).as_bytes()).await {
+                                        if let Err(_) = socket.write_all(format!("closed file {}", t).as_bytes()).await {
                                             break;
                                         }
                                         continue;
