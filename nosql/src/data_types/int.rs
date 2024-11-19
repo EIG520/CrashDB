@@ -2,7 +2,7 @@ use crate::data_types::data_types::{Savable, Loadable};
 
 use super::data_types::DBDataType;
 
-struct Int {
+pub struct Int {
     val: i64,
     valby: [u8; 8]
 }
@@ -41,6 +41,12 @@ impl Int {
     fn update_by(&mut self) {
         let mask = 0b11111111;
         self.valby = [((self.val >> 56) & mask) as u8, ((self.val >> 48) & mask) as u8, ((self.val >> 40) & mask) as u8, ((self.val >> 32) & mask) as u8, ((self.val >> 24) & mask) as u8, ((self.val >> 16) & mask) as u8, ((self.val >> 8) & mask) as u8, ((self.val) & mask) as u8];
+    }
+}
+
+impl Default for Int {
+    fn default() -> Self {
+        Int {val: 0, valby: [0; 8]}
     }
 }
 

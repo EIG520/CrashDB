@@ -6,6 +6,7 @@ use crate::data_types::data_types::{Savable, Loadable};
 use crate::commands::commands::DbHandler;
 
 use super::data_types::{DBDataType, SavableType};
+use super::int::Int;
 
 pub struct Table {
     pub data: HashMap<String, Rc<RefCell<SavableType>>>,
@@ -54,6 +55,7 @@ impl Loadable for Table {
             let value: Rc<RefCell<SavableType>> = Rc::new(RefCell::new(match type_signature {
                 0 => SavableType::String(String::from_bin(&value_bytes)),
                 1 => SavableType::Table(Table::from_bin(&value_bytes)),
+                2 => SavableType::Int(Int::from_bin(&value_bytes)),
                 _ => SavableType::String(String::from_bin(&value_bytes)),
             }));
 

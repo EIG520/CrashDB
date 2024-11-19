@@ -109,6 +109,7 @@ impl DbHandler {
                 let value = match vtype {
                     0 => SavableType::String(String::from_bin(&vvec)),
                     1 => SavableType::Table(Table::from_bin(&vvec)),
+                    2 => SavableType::Int(Int::from_bin(&vvec)),
                     signature => return Err(Box::new(InvalidTypeSignature {signature}))
                 };
 
