@@ -54,6 +54,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>>{
         let _ = std::io::stdin().read_line(&mut input);
 
         if input == "exit\n" {
+            println!();
             let _ = stream.shutdown().await;
             break;
         }
