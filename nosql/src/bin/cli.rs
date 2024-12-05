@@ -12,6 +12,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>>{
     let args: Vec<String> = std::env::args().into_iter().skip(1).collect();
     let mut skips = 0;
     let mut ccmd = vec![];
+    let mut path = vec![];
 
     let empty = String::new();
 
@@ -29,15 +30,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>>{
     // check if command passed through arguments
     if ccmd.len() > 0 {
         // Send command to server
-        stream.write_all(&ccmd.split_bytes()).await?;
-        stream.flush().await?;
+        write_to_server(&mut stream, ccmd.split_bytes(), path.split_bytes()).await?;
 
         // Get response from server
         let mut buf = vec![];
         let _bytes = stream.read_buf(&mut buf).await?;
 
         // don't use println since output may contain invalid bytes
-        // TODO: make pretty if not passed through command line args
         std::io::stdout().write_all(&buf)?;
         println!("");
         std::io::stdout().flush()?;
@@ -45,23 +44,41 @@ async fn main() -> Result<(), Box<dyn std::error::Error>>{
         return Ok(())
     }
 
+    // Start in "play-mode"
     println!("NOSQL CLIENT");
 
     loop {
         // Read input
-        print!("CrashDB> ");
+        print!("CrashDB");
+        for j in &path {print!("/{j}")}
+        print!("> ");
+        let _ = std::io::stdout().flush();
+
         let mut input = String::new();
         let _ = std::io::stdin().read_line(&mut input);
+        let mut instream = input.split_whitespace();
 
-        if input == "exit\n" {
-            println!();
-            let _ = stream.shutdown().await;
-            break;
+        // Local commands
+        match instream.next() {
+            Some("exit") => {
+                println!();
+                let _ = stream.shutdown().await;
+                break;
+            },
+            Some("open") => {
+                path.push(instream.next().unwrap().to_owned());
+                continue;
+            }
+            Some("close") => {
+                path.pop();
+                continue;
+            }
+            _ => {}
         }
 
+
         // Send command to server
-        stream.write_all(&input.split_bytes()).await?;
-        stream.flush().await?;
+        write_to_server(&mut stream, input.split_bytes(), path.split_bytes()).await?;
 
         // Get response from server
         let mut buf = vec![];
@@ -70,6 +87,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>>{
         println!("{}", String::from_utf8(buf)?);
     }
 
+    Ok(())
+}
+
+async fn write_to_server(stream: &mut TcpStream, cmdbytes: Vec<u8>, pathbytes: Vec<u8>) -> Result<(), Box<dyn std::error::Error>> {
+    // write everything in one write
+    stream.write_all(&vec![
+        &u32_to_bytes(cmdbytes.len() as u32) as &[u8],
+        &cmdbytes[..],
+        &pathbytes[..]
+    ].concat()).await?;
+    stream.flush().await?;
     Ok(())
 }
 

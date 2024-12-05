@@ -108,52 +108,27 @@ async fn listen_for_client(fcmdsender: Arc<mpsc::Sender<(String, Vec<String>, Ve
         let rcmdsender = fcmdsender.clone();
         
         tokio::spawn( async move {
-            let mut dir: Vec<String> = vec![];
-
             // Send commands from client to main loop
             loop {
                 let mut buf = vec![];
-
                 let _ = socket.read_buf(&mut buf).await;
-                let mut cmd = bytes_to_strvec(buf).into_iter().map(|x| x.to_owned());
+
+                // leave if bad
+                if buf.len() < 4 {break;}
+
+                let sbuf = &buf[0..4];
+                let bcount = bytes_to_usize(sbuf.to_vec());
+
+                let cbuf = &buf[4..(bcount+4)];
+                let mut cmd = bytes_to_strvec(cbuf.to_vec()).into_iter().map(|x| x.to_owned());
+
+                let dirbuf = &buf[(bcount+4)..];
+                let dir = bytes_to_strvec(dirbuf.to_vec());
 
                 let (gsend, mut grecv) = mpsc::channel::<Vec<u8>>(1);
                 
-                // intercept open command
-
-                // I'm not proud of this
                 let first = match cmd.next() {
-                    Some(t) => {
-                        match t.as_str() {
-                            "open" => {
-                                if let Some(name) = cmd.next() {
-                                    dir.push(name.to_owned());
-                                }
-                                if let Err(_) = socket.write_all(b"opened").await {
-                                    break;
-                                }
-                                continue;
-                            },
-                            "close" => {
-                                match dir.pop() {
-                                    Some(t) => {
-                                        if let Err(_) = socket.write_all(format!("closed file {}", t).as_bytes()).await {
-                                            break;
-                                        }
-                                        continue;
-                                    },
-                                    _ => {
-                                        if let Err(_) = socket.write_all(b"file couldn't be closed").await {
-                                            break;
-                                        }
-                                        continue;
-                                    }
-                                };
-                            },
-                            _ => {t}
-                        }
-
-                    },
+                    Some(t) => { t },
                     _ => {
                         if let Err(_) = socket.write_all(b"invalid command").await {
                             break;
@@ -190,6 +165,7 @@ pub fn bytes_to_strvec(bytes: Vec<u8>) -> Vec<String> {
         idx += 4;
 
         let str_bytes = bytes[idx..(idx+size)].to_vec();
+
         svec.push(String::from_bin(&str_bytes));
         idx += size;
     }
