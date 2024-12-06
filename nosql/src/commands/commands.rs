@@ -38,15 +38,18 @@ pub struct DbHandler {
 }
 
 impl DbHandler {
+    // DB-level commands (checked first)
     pub fn handle_command<'a>(&'a mut self, first: &'a str, cmd: impl Iterator<Item = &'a str>) -> Result<Vec<u8>, Box<dyn std::error::Error + '_>> {    
         return match first {
             "dump" => self.handle_dump(cmd),
+            "hawk" => Ok(b"tuah".to_vec()),
             _ => Ok(b"unknown command".to_vec())
         }
     }
 }
 
 impl Table {
+    // Table-level commands
     pub fn handle_command<'a>(&mut self, first: &'a str, cmd: impl Iterator<Item = &'a str>) -> Result<Vec<u8>, Box<dyn std::error::Error + '_>> {        
         return match first {
             "set" => self.handle_set(cmd),
