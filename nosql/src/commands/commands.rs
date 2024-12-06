@@ -42,6 +42,8 @@ impl DbHandler {
     pub fn handle_command<'a>(&'a mut self, first: &'a str, cmd: impl Iterator<Item = &'a str>) -> Result<Vec<u8>, Box<dyn std::error::Error + '_>> {    
         return match first {
             "dump" => self.handle_dump(cmd),
+            "ping" => Ok(b"pong".to_vec()),
+            // alternative to ping
             "hawk" => Ok(b"tuah".to_vec()),
             _ => Ok(b"unknown command".to_vec())
         }

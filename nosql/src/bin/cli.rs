@@ -1,4 +1,5 @@
 use std::io::Write;
+use std::time::Instant;
 use nosql::utils::u32_to_bytes;
 use tokio::{io::AsyncWriteExt, io::AsyncReadExt, net::TcpStream};
 
@@ -58,7 +59,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>>{
         let _ = std::io::stdin().read_line(&mut input);
         let mut instream = input.split_whitespace();
 
-        // Local commands
+        // Local commands (don't show timae)
         match instream.next() {
             Some("exit") => {
                 println!();
@@ -76,6 +77,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>>{
             _ => {}
         }
 
+        let now = Instant::now();
 
         // Send command to server
         write_to_server(&mut stream, input.split_bytes(), path.split_bytes()).await?;
@@ -84,7 +86,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>>{
         let mut buf = vec![];
         let _bytes = stream.read_buf(&mut buf).await?;
 
-        println!("{}", String::from_utf8(buf)?);
+        println!("{} ({:?})", String::from_utf8(buf)?, now.elapsed());
     }
 
     Ok(())
