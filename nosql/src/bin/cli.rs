@@ -1,6 +1,6 @@
 use std::io::Write;
 use std::time::Instant;
-use nosql::utils::u32_to_bytes;
+use nosql::utils::{bytes_to_usize, u32_to_bytes};
 use tokio::{io::AsyncWriteExt, io::AsyncReadExt, net::TcpStream};
 
 #[tokio::main]
@@ -59,7 +59,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>>{
         let _ = std::io::stdin().read_line(&mut input);
         let mut instream = input.split_whitespace();
 
-        // Local commands (don't show timae)
+        // Local commands (don't show time)
         match instream.next() {
             Some("exit") => {
                 println!();
@@ -83,8 +83,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>>{
         write_to_server(&mut stream, input.split_bytes(), path.split_bytes()).await?;
 
         // Get response from server
-        let mut buf = vec![];
-        let _bytes = stream.read_buf(&mut buf).await?;
+        let mut bbuf = vec![0u8; 4];
+        stream.read_exact(&mut bbuf).await?;
+
+        let mut buf = vec![0u8; bytes_to_usize(bbuf)];
+        stream.read_exact(&mut buf).await?;
 
         println!("{} ({:?})", String::from_utf8(buf)?, now.elapsed());
     }
@@ -97,6 +100,7 @@ async fn write_to_server(stream: &mut TcpStream, cmdbytes: Vec<u8>, pathbytes: V
     stream.write_all(&vec![
         &u32_to_bytes(cmdbytes.len() as u32) as &[u8],
         &cmdbytes[..],
+        &u32_to_bytes(pathbytes.len() as u32) as &[u8],
         &pathbytes[..]
     ].concat()).await?;
     stream.flush().await?;

@@ -1,6 +1,6 @@
 use nosql::commands::commands::DbHandler;
 use nosql::data_types::data_types::{Loadable, SavableType};
-use nosql::utils::bytes_to_usize;
+use nosql::utils::{bytes_to_usize, u32_to_bytes};
 use tokio::net::TcpListener;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use std::cell::RefCell;
@@ -110,20 +110,20 @@ async fn listen_for_client(fcmdsender: Arc<mpsc::Sender<(String, Vec<String>, Ve
         tokio::spawn( async move {
             // Send commands from client to main loop
             loop {
-                let mut buf = vec![];
-                let _ = socket.read_buf(&mut buf).await;
+                let mut buf= vec![0u8; 4];
+                let _ = socket.read_exact(&mut buf).await;
+                let bcount = bytes_to_usize(buf);
 
-                // leave if bad
-                if buf.len() < 4 {break;}
+                let mut cbuf = vec![0u8; bcount];
+                let _ = socket.read_exact(&mut cbuf).await;
+                let mut cmd = bytes_to_strvec(cbuf).into_iter().map(|x| x.to_owned());
 
-                let sbuf = &buf[0..4];
-                let bcount = bytes_to_usize(sbuf.to_vec());
-
-                let cbuf = &buf[4..(bcount+4)];
-                let mut cmd = bytes_to_strvec(cbuf.to_vec()).into_iter().map(|x| x.to_owned());
-
-                let dirbuf = &buf[(bcount+4)..];
-                let dir = bytes_to_strvec(dirbuf.to_vec());
+                let mut buf = vec![0u8; 4];
+                let _ = socket.read_exact(&mut buf).await;
+                println!("{}", bytes_to_usize(buf.clone()));
+                let mut dirbuf = vec![0u8; bytes_to_usize(buf)];
+                let _ = socket.read_exact(&mut dirbuf).await;
+                let dir= bytes_to_strvec(dirbuf);
 
                 let (gsend, mut grecv) = mpsc::channel::<Vec<u8>>(1);
                 
@@ -147,10 +147,17 @@ async fn listen_for_client(fcmdsender: Arc<mpsc::Sender<(String, Vec<String>, Ve
                     resp = s;
                 }
 
+                println!("{:?}", String::from_utf8(resp.to_vec()));
+
                 // 'gracefully' exit (ignore the error)
+                if let Err(_) = socket.write_all(&u32_to_bytes(resp.len() as u32)).await {
+                    break;
+                }
+
                 if let Err(_) = socket.write_all(&resp).await {
                     break;
                 }
+                let _ = socket.flush().await;
             }
         });
     }
