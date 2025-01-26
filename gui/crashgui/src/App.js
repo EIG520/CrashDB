@@ -27,8 +27,8 @@ function InfoBar() {
       <div className="center">
         <h1>{eref.current && eref.current.children[0].innerHTML}</h1>
         {data && (data.open 
-          ? <button onClick = {() => {data.open=false;forceupdate()}}>Close</button>
-          : <button onClick = {() => {data.open=true;forceupdate()}}>Open</button>
+          ? <button className="clopen" onClick = {() => {data.open=false;forceupdate()}}>Close</button>
+          : <button className="clopen" onClick = {() => {data.open=true;forceupdate()}}>Open</button>
         )}
       </div>
     </div>

@@ -46,12 +46,28 @@
   background-color: #13203b;
 }
 
+.clopen {
+  border-style: solid;
+  border-color: black;
+  color:#000000;
+  background-color: rgba(0, 0, 0, 0);
+  transition-duration: 0.4s;
+}
+
+.clopen:hover {
+  border-style: solid;
+  border-color: black;
+  color:#000000;
+  background-color: rgba(0, 0, 0, 0.713);
+}
+
 .entry {
   width: 150%;
   color: #61dafb;
   background-color: black;
   border: 0px;
   text-align: left;
+  transition-duration: 0.4s;
 }
 
 .entry:hover {
