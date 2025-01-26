@@ -54,7 +54,7 @@ function Entry({ children, root }) {
   }
 
   return (<div ref={ref}>
-    <button className={root.selected ? "selected" : "entry"} onClick = {() => {root.selected=true;data.selected=false;setinforef(ref);setdata(root)}}>
+    <button className={root.selected ? "selected" : "entry"} onClick = {() => {root.selected=true;if (data) {data.selected=false};setinforef(ref);setdata(root)}}>
       {root.display}
     </button>
     <ul>{root.open && children}</ul>
