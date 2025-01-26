@@ -104,6 +104,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 async fn listen_for_client(fcmdsender: Arc<mpsc::Sender<(String, Vec<String>, Vec<String>, mpsc::Sender<Vec<u8>>)>>, listener: &TcpListener) {
     // New client trying to connect
     if let Ok((mut socket, _addr)) = listener.accept().await {
+        println!("New client connected");
+
         // Local thing to send commands to main loop
         let rcmdsender = fcmdsender.clone();
         
@@ -159,6 +161,7 @@ async fn listen_for_client(fcmdsender: Arc<mpsc::Sender<(String, Vec<String>, Ve
                 }
                 let _ = socket.flush().await;
             }
+            println!("Client disconnected");
         });
     }
 }

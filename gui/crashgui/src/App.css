@@ -36,3 +36,47 @@
     transform: rotate(360deg);
   }
 }
+
+.sidebar {
+  position: fixed;
+  top:0;
+  right:0;
+  height: 100%;
+  width: 20em;
+  background-color: #13203b;
+}
+
+.entry {
+  width: 150%;
+  color: #61dafb;
+  background-color: black;
+  border: 0px;
+  text-align: left;
+}
+
+.entry:hover {
+  background-color: #70651d;
+}
+
+.selected {
+  width: 150%;
+  color: #61dafb;
+  background-color: rgb(180, 173, 45);
+  border: 0px;
+  text-align: left;
+}
+
+.center {
+  max-width: fit-content;
+  margin-left: 2em;
+}
+
+li {
+  padding: 0px;
+  margin: 0px;
+}
+
+ul {
+  list-style-type:none;
+  margin: 0px;
+}
