@@ -22,6 +22,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>>{
         match arg1.as_str() {
             "ip" => {ip = &arg2;skips += 1;}
             "port" => {port = &arg2;skips += 1;}
+            "path" => {path = arg2.split("/").map(|s| s.to_owned()).collect();skips += 1;}
             a => {ccmd.push(a.to_owned());}
         }
     }
@@ -31,7 +32,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>>{
     // check if command passed through arguments
     if ccmd.len() > 0 {
         // Send command to server
-        write_to_server(&mut stream, ccmd.split_bytes(), path.split_bytes()).await?;
+        write_to_server(&mut stream, ccmd.concat().split_bytes(), path.split_bytes()).await?;
 
         // Get response from server
         let mut buf = vec![];

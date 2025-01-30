@@ -7,4 +7,5 @@ target/
 nosql/dump.dat
 nosql/dump.txt
 
-gui/crash-gui/node_modules
+gui/crashgui/node_modules
+gui/crashguiserver/node_modules
