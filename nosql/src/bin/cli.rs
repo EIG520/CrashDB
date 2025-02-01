@@ -35,14 +35,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>>{
         write_to_server(&mut stream, ccmd.concat().split_bytes(), path.split_bytes()).await?;
 
         // Get response from server
-        let mut buf = vec![];
-        let _bytes = stream.read_buf(&mut buf).await?;
+        let mut bbuf = vec![0u8; 4];
+        stream.read_exact(&mut bbuf).await?;
+
+        let mut buf = vec![0u8; bytes_to_usize(bbuf)];
+        stream.read_exact(&mut buf).await?;
 
         // don't use println since output may contain invalid bytes
         std::io::stdout().write_all(&buf)?;
         println!("");
         std::io::stdout().flush()?;
-
         return Ok(())
     }
 

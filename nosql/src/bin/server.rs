@@ -60,7 +60,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     loop {
         // Get next command
         if let Some((first, cmdf, dir, sender)) = cmdlistener.recv().await {
-            println!("executing command: {:?}", cmdf);
+            println!("executing command: {first} {cmdf:?}");
 
             // Run command if it is directory-independent
             if let Ok(resp) = dbhandler.handle_command(&first, cmdf.iter().map(|i| i.as_str())) {
@@ -122,7 +122,7 @@ async fn listen_for_client(fcmdsender: Arc<mpsc::Sender<(String, Vec<String>, Ve
 
                 let mut buf = vec![0u8; 4];
                 let _ = socket.read_exact(&mut buf).await;
-                println!("{}", bytes_to_usize(buf.clone()));
+                println!("input bytes: {}", bytes_to_usize(buf.clone()));
                 let mut dirbuf = vec![0u8; bytes_to_usize(buf)];
                 let _ = socket.read_exact(&mut dirbuf).await;
                 let dir= bytes_to_strvec(dirbuf);
@@ -149,7 +149,7 @@ async fn listen_for_client(fcmdsender: Arc<mpsc::Sender<(String, Vec<String>, Ve
                     resp = s;
                 }
 
-                println!("{:?}", String::from_utf8(resp.to_vec()));
+                println!("Resp: {:?}", String::from_utf8(resp.to_vec()));
 
                 // 'gracefully' exit (ignore the error)
                 if let Err(_) = socket.write_all(&u32_to_bytes(resp.len() as u32)).await {
