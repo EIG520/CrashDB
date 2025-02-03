@@ -1,19 +1,7 @@
 const express = require('express');
 const spawn = require('child_process').spawn;
 const app = express();
-const port = 3001;
-
-// let process = spawn(
-//   "./binaries/cli", ["path", "tab", "list"]
-// );
-
-// process.stdout.on('data', (data) => {
-//   console.log(`Received: ${data}`);
-// });
-
-// process.stderr.on('data', (data) => {
-//   console.log(`Received: ${data}`);
-// });
+const port = 3000;
 
 app.get('/list', (req, res) => {
   const path = req.query.path;
