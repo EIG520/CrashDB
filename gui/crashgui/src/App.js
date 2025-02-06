@@ -15,7 +15,7 @@ class TreeNode {
     }
 }
 
-const el_root = new TreeNode("node", [], false, false, []);
+const el_root = new TreeNode("thing", [], false, false, []);
 
 function InfoBar() {
   const forceupdate = useContext(GeneralContext).forceupdate;
@@ -35,6 +35,16 @@ function InfoBar() {
   )
 }
 
+async function fetch_list(path) {
+  let res = await fetch(`${window.location.href}list${path.length == 0 ? "" : "?path="}${path.join("/")}`);
+
+  if (res.ok) {
+    return await res.text().then((t) => t.split('\n'));
+  } else {
+    return "Data could not be loaded..."
+  }
+}
+
 function Entry({ children, root }) {
   const ref = useRef(null);
   const setinforef = useContext(GeneralContext).setinforef;
@@ -43,14 +53,19 @@ function Entry({ children, root }) {
   const forceupdate = useContext(GeneralContext).forceupdate;
 
   if (root.open && !root.open_ready) {
-    const new_path = [...root.path, root.display];
+    const list = fetch_list(root.path);
+    console.log(list);
 
-    root.children[0] = (new TreeNode(root.display + ".0", [], false, false, new_path));
-    root.children[1] = (new TreeNode(root.display + ".1", [], false, false, new_path));
-    root.children[2] = (new TreeNode(root.display + ".2", [], false, false, new_path));
-    root.open_ready = true;
+    list.then((children) => {
+      let i = 0;
+      children.forEach((child) => {
+        root.children[i++] = (new TreeNode(child, [], false, false, [...root.path, child]));
+      })
 
-    forceupdate();
+      root.open_ready = true;
+
+      forceupdate();
+    });
   }
 
   return (<div ref={ref}>
