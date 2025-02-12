@@ -46,28 +46,27 @@ Run the client
 ```
 $ ./cli-clinux
 NOSQL CLIENT
-set foo bar
-CrashDB> "done"
-get foo
-CrashDB> "bar"
+CrashDB> set foo bar
+done (435.01µs)
+CrashDB> get foo
+bar (537.992µs)
+CrashDB> 
 ```
 Make a table
 ```
-touch mytable table
-CrashDB> "done"
-open mytable
-CrashDB> "opened"
-set foo notbar
-CrashDB> "done"
-get foo
-CrashDB> "notbar"
+CrashDB> touch mytable table
+done (351.141µs)
+CrashDB> open mytable
+CrashDB/mytable> set foo notbar
+done (562.085µs)
+CrashDB/mytable> get foo
+notbar (414.081µs)
 ```
 Close a table
 ```
-close mytable
-CrashDB> "closed file \"mytable\""
-get foo
-CrashDB> "bar"
+CrashDB/mytable> close mytable
+CrashDB> get foo
+bar (596.225µs)
 ```
 
 
