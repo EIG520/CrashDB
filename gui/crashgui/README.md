@@ -1,3 +1,10 @@
+# CrashGUI
+This is the GUI for the system.\
+Just run `npm serve` and visit [http://localhost:3000](http://localhost:3000) - you can ignore the other commands
+This will, by default, connect to the database hosted at port 8080 and I will add a way to change that in the future.
+
+
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
