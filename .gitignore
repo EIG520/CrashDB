@@ -9,3 +9,4 @@ nosql/dump.txt
 
 gui/crashgui/node_modules
 gui/crashguiserver/node_modules
+gui
