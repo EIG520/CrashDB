@@ -32,7 +32,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>>{
     // check if command passed through arguments
     if ccmd.len() > 0 {
         // Send command to server
-        write_to_server(&mut stream, ccmd.concat().split_bytes(), path.split_bytes()).await?;
+        write_to_server(&mut stream, ccmd.split_bytes(), path.split_bytes()).await?;
 
         // Get response from server
         let mut bbuf = vec![0u8; 4];
