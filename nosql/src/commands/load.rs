@@ -26,7 +26,7 @@ impl Table {
     pub fn handle_get<'a>(&mut self, mut cmd: impl Iterator<Item = &'a str>) -> Result<Vec<u8>, Box<dyn std::error::Error + 'static>> {
         let bind = self.load(cmd.next().ok_or(GetError::NotEnoughArgsError(NotEnoughArgsError {}))?.to_owned())?;
         let bind2 = bind.borrow();
-        let retr = bind2.to_bin();
+        let retr = bind2.to_string_bin();
 
         Ok(retr.to_vec())
     }

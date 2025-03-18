@@ -5,6 +5,7 @@ use super::data_types::DBDataType;
 impl Savable for String {
     fn to_bin(&self) -> &[u8] { self.as_bytes() }
     fn signature(&self) -> u8 { 0 }
+    fn to_string_bin(&self) -> Vec<u8> { self.as_bytes().to_vec() }
 }
 
 impl Loadable for String {

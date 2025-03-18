@@ -58,6 +58,9 @@ impl Table {
             "get" => self.handle_get(cmd),
             "touch" => self.handle_touch(cmd),
             "list" => self.handle_list(cmd),
+
+            "inc" => self.handle_inc(cmd),
+            
             _ => Ok(b"unknown command".to_vec())
         };
     }

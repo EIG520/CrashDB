@@ -8,6 +8,7 @@ use crate::commands::commands::DbHandler;
 use super::data_types::{DBDataType, SavableType};
 use super::int::Int;
 
+#[derive(Clone)]
 pub struct Table {
     pub data: HashMap<String, Rc<RefCell<SavableType>>>,
     bin_data: Vec<u8>
@@ -18,6 +19,9 @@ impl Savable for Table {
         &self.bin_data
     }
     fn signature(&self) -> u8 { 1 }
+    fn to_string_bin(&self) -> Vec<u8> {
+        b"Key/Val Table".to_vec()
+    }
 }
 
 impl Loadable for Table {

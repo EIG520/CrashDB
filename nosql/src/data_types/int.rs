@@ -1,7 +1,8 @@
 use crate::data_types::data_types::{Savable, Loadable};
-
 use super::data_types::DBDataType;
+use std::ops::Add;
 
+#[derive(Clone, Copy)]
 pub struct Int {
     val: i64,
     valby: [u8; 8]
@@ -12,6 +13,19 @@ impl Savable for Int {
         return &self.valby;
     }
     fn signature(&self) -> u8 { 2 }
+    fn to_string_bin(&self) -> Vec<u8> {
+        format!("{}", self.val).as_bytes().to_vec()
+    }
+}
+
+impl Add for Int {
+    type Output = Self;
+    fn add(self, other: Self) -> Self::Output {
+        let mut new = Self::Output{val: self.val + other.val, valby: [0;8]};
+        new.update_by();
+
+        return new;
+    }
 }
 
 impl Loadable for Int {
@@ -47,6 +61,15 @@ impl Int {
 impl Default for Int {
     fn default() -> Self {
         Int {val: 0, valby: [0; 8]}
+    }
+}
+
+impl From<i64> for Int {
+    fn from(val: i64) -> Self {
+        let mut new = Self {val, valby: [0; 8]};
+        new.update_by();
+
+        new
     }
 }
 

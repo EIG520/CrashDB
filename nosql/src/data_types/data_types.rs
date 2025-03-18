@@ -3,6 +3,7 @@ pub use super::int::Int;
 
 pub trait Savable {
     fn to_bin(&self) -> &[u8];
+    fn to_string_bin(&self) -> Vec<u8>;
     fn signature(&self) -> u8;
 }
 
@@ -13,6 +14,7 @@ pub trait Loadable {
 
 pub trait DBDataType : Savable + Loadable {}
 
+#[derive(Clone)]
 pub enum SavableType {
     String(String),
     Table(Table),
@@ -32,6 +34,13 @@ impl Savable for SavableType {
             SavableType::String(t) => {t.signature()},
             SavableType::Table(t) => {t.signature()},
             SavableType::Int(t) => {t.signature()}
+        }
+    }
+    fn to_string_bin(&self) -> Vec<u8> {
+        match self {
+            SavableType::String(t) => {t.to_string_bin()},
+            SavableType::Table(t) => {t.to_string_bin()},
+            SavableType::Int(t) => {t.to_string_bin()}
         }
     }
 }
