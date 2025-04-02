@@ -1,5 +1,5 @@
 use super::commands::NotEnoughArgsError;
-use crate::data_types::{data_types::{Loadable, Savable, SavableType}, int::Int, table::Table};
+use crate::data_types::{data_types::{Savable, SavableType}, table::Table};
 use std::{cell::RefCell, rc::Rc, str::FromStr};
 
 impl Table {

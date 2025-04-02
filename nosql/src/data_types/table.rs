@@ -6,7 +6,6 @@ use crate::data_types::data_types::{Savable, Loadable};
 use crate::commands::commands::DbHandler;
 
 use super::data_types::{DBDataType, SavableType};
-use super::int::Int;
 
 #[derive(Clone)]
 pub struct Table {
