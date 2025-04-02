@@ -58,4 +58,13 @@ impl SavableType {
             _ => SavableType::String(s)
         }
     }
+
+    pub fn from_bin(s: &[u8], typ: u8) -> Self {
+        match typ {
+            0 => SavableType::String(String::from_bin(s)),
+            1 => SavableType::Table(Table::from_bin(s)),
+            2 => SavableType::Int(Int::from_bin(s)),
+            _ => SavableType::String(String::from_bin(s))
+        }
+    }
 }

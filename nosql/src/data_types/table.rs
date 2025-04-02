@@ -56,12 +56,16 @@ impl Loadable for Table {
             let value_bytes = &b[idx..(idx+size)];
             idx += size;
 
-            let value: Rc<RefCell<SavableType>> = Rc::new(RefCell::new(match type_signature {
-                0 => SavableType::String(String::from_bin(&value_bytes)),
-                1 => SavableType::Table(Table::from_bin(&value_bytes)),
-                2 => SavableType::Int(Int::from_bin(&value_bytes)),
-                _ => SavableType::String(String::from_bin(&value_bytes)),
-            }));
+            let value: Rc<RefCell<SavableType>> = Rc::new(RefCell::new(
+                SavableType::from_bin(value_bytes, type_signature)
+
+                // match type_signature {
+                //     0 => SavableType::String(String::from_bin(&value_bytes)),
+                //     1 => SavableType::Table(Table::from_bin(&value_bytes)),
+                //     2 => SavableType::Int(Int::from_bin(&value_bytes)),
+                //     _ => SavableType::String(String::from_bin(&value_bytes)),
+                // }
+            ));
 
             table.insert(key, value);
         }
