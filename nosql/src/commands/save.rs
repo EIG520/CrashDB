@@ -1,6 +1,6 @@
 use super::commands::NotEnoughArgsError;
 use crate::data_types::{data_types::{Loadable, Savable, SavableType}, int::Int, table::Table};
-use std::{cell::RefCell, rc::Rc};
+use std::{cell::RefCell, rc::Rc, str::FromStr};
 
 impl Table {
     pub fn handle_set<'a>(&mut self, mut cmd: impl Iterator<Item=&'a str>) -> Result<Vec<u8>, Box<dyn std::error::Error>> {        
@@ -13,12 +13,7 @@ impl Table {
             typ = ty.borrow().signature();
         }
         
-        let val = match typ {
-            0 => SavableType::String(string_val),
-            1 => SavableType::Table(Table::from_str(&string_val)),
-            2 => SavableType::Int(Int::from_str(&string_val)), 
-            _ => {SavableType::String(string_val)}
-        };
+        let val = SavableType::from_string(string_val, typ);
 
         self.save(
             key,
@@ -38,26 +33,22 @@ impl Table {
         let name = cmd.next().ok_or(NotEnoughArgsError {})?.to_owned();
         let ty = cmd.next().ok_or( NotEnoughArgsError {})?;
 
-        self.touch(name, match ty {
-            "str" => 0,
-            "table" => 1,
-            "int" => 2,
-            // default to string
-            _ => 0
-        })?;
+        self.save(name, Rc::new(RefCell::new(SavableType::from_str(ty)?)))?;
 
         Ok(b"done".to_vec())
     }
 
-    pub fn touch(&mut self, name: String, ty: usize) -> Result<(), Box<dyn std::error::Error>> {
-        self.save(name, Rc::new(RefCell::new(match ty {
-            0 => SavableType::String(String::default()),
-            1 => SavableType::Table(Table::default()),
-            2 => SavableType::Int(Int::default()),
-            // default to string
-            _ => SavableType::String(String::default())
-        })))?;
+    // pub fn touch(&mut self, name: String, ty: u8) -> Result<(), Box<dyn std::error::Error>> {
+    //     self.save(name, Rc::new(RefCell::new(            
+    //         match ty {
+    //         0 => SavableType::String(String::default()),
+    //         1 => SavableType::Table(Table::default()),
+    //         2 => SavableType::Int(Int::default()),
+    //         // default to string
+    //         _ => SavableType::String(String::default())
+    //         }
+    //     )))?;
 
-        Ok(())
-    }
+    //     Ok(())
+    // }
 }

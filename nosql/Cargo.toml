@@ -7,4 +7,6 @@ edition = "2021"
 
 [dependencies]
 num_enum = "0.7.3"
+strum = "0.27.1"
+strum_macros = "0.27.1"
 tokio = { version = "1.39.3", features = ["full"] }
