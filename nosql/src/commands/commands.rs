@@ -60,6 +60,7 @@ impl Table {
             "list" => self.handle_list(cmd),
 
             "inc" => self.handle_inc(cmd),
+            "dec" => self.handle_dec(cmd),
             
             _ => Ok(b"unknown command".to_vec())
         };

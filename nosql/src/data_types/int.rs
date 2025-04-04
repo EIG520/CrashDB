@@ -1,6 +1,6 @@
 use crate::data_types::data_types::{Savable, Loadable};
 use super::data_types::DBDataType;
-use std::ops::Add;
+use std::ops::{Add, Sub};
 
 #[derive(Clone, Copy)]
 pub struct Int {
@@ -22,6 +22,16 @@ impl Add for Int {
     type Output = Self;
     fn add(self, other: Self) -> Self::Output {
         let mut new = Self::Output{val: self.val + other.val, valby: [0;8]};
+        new.update_by();
+
+        return new;
+    }
+}
+
+impl Sub for Int {
+    type Output = Self;
+    fn sub(self, other: Self) -> Self::Output {
+        let mut new = Self::Output{val: self.val - other.val, valby: [0;8]};
         new.update_by();
 
         return new;
